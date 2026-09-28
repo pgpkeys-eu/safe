@@ -152,6 +152,11 @@ Other helper functions defined for Result:
 
 These mirror their Rust equivalents.
 
+### JSON
+
+`Result` is not serialisable.
+This is intentional.
+
 ### Result[Option[T]]
 
 The common Rust return value type `Result[Option[T]]` can be easily generated:
