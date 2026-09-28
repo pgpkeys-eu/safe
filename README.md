@@ -42,7 +42,7 @@ While this is conceptually intuitive, interfaces are nillable types and so canno
 
 ```
 package foo
-import "safe"
+import "github.com/pgpkeys-eu/safe"
 
 func Foo() safe.Result[safe.Option[string]] {
     return safe.Result(safe.Some("foo"))
@@ -54,7 +54,7 @@ While dot-importing runs the risk of namespace collisions, it reduces boilerplat
 
 ```
 package foo
-import . "safe"
+import . "github.com/pgpkeys-eu/safe"
 
 func Foo() Result[Option[string]] {
     return Result(Some("foo"))
