@@ -63,7 +63,7 @@ func Foo() Result[Option[string]] {
 
 # Types
 
-## Option
+## Option[T]
 
 Creating an `Option[T]`:
 
@@ -74,7 +74,7 @@ o3 := Some[T](value)
 ```
 
 The zero literal `Option[T]{}` represents None.
-If `value` is nil, `o3` represents None, otherwise it represents Some.
+If `value` is nil, `Some(value)` will (perhaps counterintuitively) return a None `Option`, otherwise it returns a Some.
 This ensures that a nil value can never be obtained from a Some `Option`.
 
 Consuming an `Option` is done by calling `Match()` and type-matching the return value:
@@ -82,13 +82,13 @@ Consuming an `Option` is done by calling `Match()` and type-matching the return 
 ```
 switch x := o1.Match().(type){
 case MatchSome[T]:
-    fmt.printf("OK: %v", x.Some)
-case MatchNone[T]:
-    fmt.printf("None")
+    fmt.printf("Some: %v", x.Some)
 default:
-    fmt.printf("Should not get here")
+    fmt.printf("None")
 }
 ```
+
+Note that in practice there is no need to explicitly handle `case MatchNone[T]`.
 
 `MatchSome[T]` contains a single public member `Some` which contains the original non-nil value.
 `MatchNone[T]` contains no public members and represents a nil value.
@@ -111,11 +111,11 @@ Note that a Some `Option` containing a struct with no serialisable members will 
 and so will deserialise to None rather than the original Some.
 This is a limitation of JSON, and a similar caveat applies to nil pointers.
 
-`Option` does not support `omitzero` or `omitempty`.
+`Option` does not (currently) support `omitzero` or `omitempty`.
 
-## Result
+## Result[T]
 
-Creating a `Result`:
+Creating a `Result[T]`:
 
 ```
 r1 := Result[T]{}
@@ -124,7 +124,7 @@ r3 := Err[T](err_value)
 ```
 
 The zero literal `Result[T]{}` represents an OK containing the zero value of `T`.
-If `err_value` is nil, `r3` represents an Err containing an empty error message.
+If `err_value` is nil, `Err()` returns an Err `Result` containing an empty error message.
 This ensures that a nil error can never be obtained from an Err `Result`.
 
 Consuming a `Result` is done by calling `Match()` and type-matching the return value:
