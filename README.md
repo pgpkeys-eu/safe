@@ -171,8 +171,13 @@ return Err(errors.New("help"))
 
 ## References
 
-Several similar packages exist, but do not provide nil dereference safety:
+Several packages exist for `Option` and/or `Result`, but do not provide nil dereference safety:
 
-* https://avivatedgi.github.io/go-rust-std/
-* https://github.com/eminarican/safetypes
-* https://github.com/sdwillbrand/go-option
+* [go-rust-std](https://avivatedgi.github.io/go-rust-std/) implements `Option`, `Result` and `Collection` interfaces
+* [safetypes](https://github.com/eminarican/safetypes) implements `Option` and `Result` interfaces
+* [go-option](https://github.com/sdwillbrand/go-option) implements an `Option` interface
+
+There are also tools for implementing real union types, but require a preprocessor stage:
+
+* [MkUnion](https://widmogrod.github.io/mkunion/) implements tagged unions, but also reimplements type matching
+* [unionize](https://github.com/zyedidia/unionize) implements C-style untagged unions
