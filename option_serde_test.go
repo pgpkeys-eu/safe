@@ -33,7 +33,7 @@ func (s *OptionSerdeSuite) TestJSON(c *gc.C) {
 
 func (s *OptionSerdeSuite) TestMultiJSON(c *gc.C) {
 	ptr := "adieu"
-	doc := newTestMultiStruct("so long", "", &ptr)
+	doc := newTestMultiStruct("so long", "", &ptr, 42)
 	newDoc := testMultiOptions{} // do not use zero literals in production
 
 	buf := []byte(`{"S": "so long", "N": {}, "O": "", "P": "adieu", "Q": 42}`)

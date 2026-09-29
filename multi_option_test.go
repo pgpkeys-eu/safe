@@ -16,13 +16,13 @@ type testMultiOptions struct {
 	Q Option2[*string, int32]
 }
 
-func newTestMultiStruct(s1, s2 string, s3 *string) testMultiOptions {
+func newTestMultiStruct(s1, s2 string, s3 *string, i4 int32) testMultiOptions {
 	t := testMultiOptions{}
 	t.S = s1
 	t.N = None2[string, int8]()
 	t.O = Some2[string, string, int8](s2)
 	t.P = Some2[*string, *string, int32](s3)
-	t.Q = Some2[int32, *string, int32](42)
+	t.Q = Some2[int32, *string, int32](i4)
 	return t
 }
 
@@ -35,7 +35,7 @@ func (s *OptionSuite) TestMultiOptions(c *gc.C) {
 		c.Fail()
 	}
 
-	test := newTestMultiStruct("test", "", nil)
+	test := newTestMultiStruct("test", "", nil, 42)
 	res3 := Some(&test)
 	c.Check(res3.IsSome(), gc.Equals, true)
 
