@@ -93,7 +93,7 @@ Note that in practice there is no need to explicitly handle `case MatchNone[T]`.
 `MatchSome[T]` contains a single public member `Some` which contains the original non-nil value.
 `MatchNone[T]` contains no public members and represents a nil value.
 
-Other helper functions defined for Option:
+Other helper functions defined for `Option[T]`:
 
 * IsSome() bool
 * IsNone() bool
@@ -169,7 +169,79 @@ return OK(Some(foo))
 return Err(errors.New("help"))
 ```
 
-## References
+## Option\<n\>[T1, T2, ...]
+
+`Option<n>[T1, T2, ...]` is the generalisation of `Option[T]` to `n` Some types.
+It is the equivalent of a generic (i.e. Rust-style) tagged union, with the exception that it always permits None (the zero value).
+
+It comes with some additional caveats, due to limitations of Go's type system.
+Unlike `Option[T]` and `Result[T]` it MAY panic on construction if the two type rules (given below) are not followed.
+A basic unit test suite should trigger such a panic immediately, and the error message will describe the solution.
+
+`Option<n>` is created similarly to `Option`, but with additional type parameters.
+Using `Option2` as a concrete example:
+
+```
+o1 := Option2[T1, T2]{}
+o2 := None2[T1, T2]()
+o3 := Some2[T0, T1, T2](value) // where value is of type T0
+```
+
+Beware that unlike `Option<n>` and `None<n>`, `Some<n>` takes `n+1` type parameters.
+This is because Go's type system cannot restrict at compile time that only a value of type `T1`, `T2` etc. can be supplied as input,
+so we must pass the input type as an additional type parameter `T0`.
+`Some<n>` will check at runtime whether `T0` is one of `T1`, `T2` etc., and if not it will panic with a friendly error message.
+
+The above is the first type rule of `Option<n>`.
+
+Go also cannot tell at compile time what size `T1` and `T2` are - this can only be done at runtime using reflection.
+This means that it cannot tell which of `T1` or `T2` is bigger, and therefore how much memory to allocate to the Option struct.
+Instead, it allocates enough memory to hold a `T1`, and assumes that `T2` is the same size or smaller.
+`Some<n>` will check at runtime whether `T1` is the larger type, and if not it will panic with a friendly error message.
+
+The above is the second type rule of `Option<n>`.
+
+Note that these runtime panics depend only on the type parameters, not on any values.
+They should therefore fire reliably in a test suite, so long as the code paths are covered.
+Unit tests are your friend.
+`Option<n>` follows the `safe` design pattern of moving any sharp edges into the constructors.
+This reduces the risk of panics, but not to zero - if this is a problem then `Option<n>` may not be for you.
+
+Consuming an `Option<n>` is done the same way as for `Option`:
+
+```
+switch x := o1.Match().(type){
+case MatchSome[T1]:
+    fmt.printf("SomeT1: %v", x.Some)
+case MatchSome[T2]:
+    fmt.printf("SomeT2: %v", x.Some)
+default:
+    fmt.printf("None")
+}
+```
+
+None is represented by `MatchNone[T1]`, but as with `Option` there is no need to explicitly match it.
+
+Other helper functions defined for `Option<n>`:
+
+* IsSome() bool
+* IsNone() bool
+
+These mirror their Rust equivalents.
+There is no `UnwrapOr` or `UnwrapOrElse` because there is more than one non-None return type,
+so type matching is inevitable.
+
+Note: in Go, the generic types `Option[T1]`, `Option[T1, T2]`, `Option[T1, T2, T3]` are not distinct.
+We disambiguate them by name: `Option2`, `Option3` etc., each of which must be implemented separately.
+Only `Option2` is currently implemented.
+`Option3`, `Option4` and higher can be easily implemented in future, because the design constraints are the same for all `n>1`.
+
+### JSON
+
+`Option<n>` is compitible with `encoding/json`, similarly to `Option`.
+When deserialising, each type is tried in the order None, `T1`, `T2` etc. and the first type to successfully deserialise is returned.
+
+# References
 
 Several packages exist for `Option` and/or `Result`, but do not provide nil dereference safety:
 
@@ -177,7 +249,7 @@ Several packages exist for `Option` and/or `Result`, but do not provide nil dere
 * [safetypes](https://github.com/eminarican/safetypes) implements `Option` and `Result` interfaces
 * [go-option](https://github.com/sdwillbrand/go-option) implements an `Option` interface
 
-There are also tools for implementing real union types, but require a preprocessor stage:
+There are also existing tools for implementing real union types, but which require a preprocessor stage:
 
 * [MkUnion](https://widmogrod.github.io/mkunion/) implements tagged unions, but also reimplements type matching
 * [unionize](https://github.com/zyedidia/unionize) implements C-style untagged unions
