@@ -16,7 +16,7 @@ type Option[T any] struct {
 	//
 	// DO NOT SET STRUCT MEMBER VALUES DIRECTLY
 	//
-	tagField   bool
+	tagField   uint
 	unionField T
 }
 
@@ -31,7 +31,7 @@ type MatchNone[T any] struct {
 	//
 	// !!!!! DO NOT USE THIS STRUCT LITERAL !!!!!
 	//
-	tagField   bool
+	tagField   uint
 	unionField T
 }
 
@@ -46,7 +46,7 @@ type MatchSome[T any] struct {
 	//
 	// !!!!! DO NOT USE THIS STRUCT LITERAL !!!!!
 	//
-	tagField bool
+	tagField uint
 	Some     T
 }
 
@@ -54,9 +54,10 @@ type MatchSome[T any] struct {
 func (o Option[T]) Match() any {
 	// use pointer type mangling to avoid making copies
 	// this relies on the memory layouts of all three types being identical
-	if o.tagField {
+	switch o.tagField {
+	case 1:
 		return *(*MatchSome[T])(unsafe.Pointer(&o))
-	} else {
+	default:
 		return *(*MatchNone[T])(unsafe.Pointer(&o))
 	}
 }
@@ -79,26 +80,27 @@ func Some[T any](value T) Option[T] {
 		kind == reflect.Func) && v.IsNil() {
 		return Option[T]{}
 	} else {
-		return Option[T]{true, value}
+		return Option[T]{1, value}
 	}
 }
 
 // IsNone checks directly if the Option is None.
 func (o Option[T]) IsNone() bool {
-	return !o.tagField
+	return o.tagField == 0
 }
 
 // IsSome checks directly if the Option is Some.
 func (o Option[T]) IsSome() bool {
-	return o.tagField
+	return o.tagField != 0
 }
 
 // UnwrapOr returns the value of the Option if it is Some.
 // It returns a static value if the Option is None.
 func (o Option[T]) UnwrapOr(d *T) *T {
-	if o.tagField {
+	switch o.tagField {
+	case 1:
 		return &o.unionField
-	} else {
+	default:
 		return d
 	}
 }
@@ -106,9 +108,10 @@ func (o Option[T]) UnwrapOr(d *T) *T {
 // UnwrapOrElse returns the value of the Option if it is Some.
 // It returns a calculated value if the Option is None.
 func (o Option[T]) UnwrapOrElse(f func() *T) *T {
-	if o.tagField {
+	switch o.tagField {
+	case 1:
 		return &o.unionField
-	} else {
+	default:
 		return f()
 	}
 }

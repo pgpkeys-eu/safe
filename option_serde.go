@@ -13,9 +13,10 @@ import (
 
 // MarshalJSON takes a value receiver for maximum genericity
 func (o Option[T]) MarshalJSON() ([]byte, error) {
-	if o.tagField {
+	switch o.tagField {
+	case 1:
 		return json.Marshal(o.unionField)
-	} else {
+	default:
 		return []byte("{}"), nil
 	}
 }
@@ -33,7 +34,7 @@ func (o *Option[T]) UnmarshalJSON(b []byte) (err error) {
 	// Otherwise we read the value directly
 	err = json.Unmarshal(b, &value)
 	if err == nil {
-		*o = Option[T]{true, value}
+		*o = Option[T]{1, value}
 		return
 	}
 	return
