@@ -36,7 +36,7 @@ func (s *OptionSerdeSuite) TestMultiJSON(c *gc.C) {
 	doc := newTestMultiStruct("so long", "", &ptr)
 	newDoc := testMultiOptions{} // do not use zero literals in production
 
-	buf := []byte(`{"S": "so long", "N": {}, "O": "", "P": "adieu", "Q": 0}`)
+	buf := []byte(`{"S": "so long", "N": {}, "O": "", "P": "adieu", "Q": 42}`)
 	err := json.Unmarshal(buf, &newDoc)
 	c.Check(err, gc.IsNil)
 	c.Check(newDoc, gc.DeepEquals, doc)
