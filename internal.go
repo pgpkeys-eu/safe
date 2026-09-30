@@ -117,7 +117,7 @@ func someN[T0, T1, T2, T3, T4, T5, T6, T7, T8 any](value T0) (o optionN[T1, T2, 
 // match() converts an optionN into a MatchSome or xx.
 func (o optionN[T1, T2, T3, T4, T5, T6, T7, T8]) match() any {
 	// use pointer type mangling to avoid making copies
-	// this relies on the memory layouts of Option and MatchSome being identical
+	// this relies on the memory layouts of optionN and MatchSome being identical
 	switch o.t.(type) {
 	case nil:
 		return xx{} // check nil first for efficiency

@@ -1,11 +1,11 @@
 # Safe
 
 `safe` is a Go package that provides tagged-union types for handling nils and errors more safely.
-It is inspired by Rust's `Option` and `Result` types, and informed by previous efforts to implement them in Go that exposed sharp edges in unexpected places.
+It is inspired by Rust's `enum` types, and informed by previous efforts to implement them in Go that exposed sharp edges in unexpected places.
 
 ## Overview
 
-Due to the architecture of Go, there is no way to seamlessly implement Rust-style tagged unions.
+Due to the architecture of Go, there is no way to seamlessly implement tagged unions (known as `enum`s in Rust).
 `safe` attempts to expose the inevitable seams in places that minimise the risk of accidental unsafe practice.
 
 The design brief of `safe` is:

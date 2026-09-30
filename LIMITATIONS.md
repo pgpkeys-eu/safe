@@ -6,7 +6,7 @@ Unlike Rust, the underlying Some types are not considered to be instances of `Op
 It is not possible therefore to construct a None value without a type parameter, and the parameterised constructor `None[T]()` is just syntactic sugar for `Option[T]{}`.
 It is possible to infer the return type of `Some()` from its argument, but this does not generalise to `Some2()` and above.
 
-Type matching of an Option requires two type matches in practice, so is less efficient than an interface.
+Type matching of an `Option` requires two type matches in practice, so is less efficient than an interface.
 The first type match is internal to `safe` and checks for nils, while the second is performed by the caller on a value that is guaranteed to be non-nil.
 
 ## Option\<n\>[T1, T2, ...]
@@ -27,7 +27,7 @@ This makes it difficult to remember the order of type parameters, particularly w
 
 **Deep Reflection**
 
-If T1 is (or contains) a pointer, `reflect.DeepEquals()` will attempt to dereference that location in memory as a pointer, regardless of the type currently stored.
+If `T1` is (or contains) a pointer, `reflect.DeepEquals()` will attempt to dereference that location in memory as a pointer, regardless of the type currently stored.
 This can cause test suites to panic with a pointer error even if no actual pointers are being compared.
 If you need to use `DeepEquals`, there are several precautions that you can take:
 
@@ -55,7 +55,7 @@ Similarly, if you are familiar with other languages such as C it may seem possib
 ```
 type Option2[T1, T2 any] struct {
 	t any
-	v [unsafe.Sizeof(T1)<unsafe.Sizeof(T2)?unsafe.Sizeof(T1):unsafe.Sizeof(T2))]byte
+	v [(unsafe.Sizeof(T1)<unsafe.Sizeof(T2))?unsafe.Sizeof(T1):unsafe.Sizeof(T2))]byte
 }
 ```
 
@@ -70,7 +70,7 @@ type Option2[T1, T2 any] struct {
 }
 ```
 
-Even this would have been an improvement, because then DeepEquals would compare `v` as raw bytes and wouldn't raise a pointer error (See "Deep Reflection" above).
+Even this would have been an improvement, because then `DeepEquals` would compare `v` as raw bytes and wouldn't raise a pointer error (See "Deep Reflection" above).
 But we can't have nice things.
 
 **Nice Things**
@@ -83,11 +83,11 @@ This may seem excessive - we know where the value field is without having to der
 Firstly, by using pointer mangling, the tag interface implicitly remembers the dynamic type of the stored value.
 We can type match on the tag to discover the dynamic type, instead of hand-rolling our own mapping of tags to types.
 
-Second, pointing the tag interface at the value means there is always a valid pointer to the stored value for the lifetime of the Option.
+Second, pointing the tag interface at the value means there is always a valid pointer to the stored value for the lifetime of the `Option`.
 Because interfaces are type-annotated, the garbage collector knows the dynamic type of the target,
 including whether it has pointer members, and so won't double-free any second-order pointer targets.
 
-And finally, it allows us to call MarshalJSON directly on the tag interface, which falls through to the value below, with the correct dynamic typing.
+And finally, it allows us to call `MarshalJSON` directly on the tag interface, which falls through to the value below, with the correct dynamic typing.
 This avoids a LOT of boilerplate type matching code.
 
 # Pretty Please With a Cherry on Top
