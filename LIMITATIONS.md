@@ -81,3 +81,13 @@ the garbage collector knows the structure pointed to, including if it has pointe
 
 And finally, it allows us to call MarshalJSON directly on the tag, which falls through to the concrete type below, with correct typing.
 This avoids a LOT of boilerplate type matching code.
+
+# Pretty Please With a Cherry on Top
+
+There are a few small (and independently defensible) additions to the Go core language that would eliminate the panics in `Option<n>`:
+
+* compile-time evaluation of `Sizeof` and simple expressions (as in C) would let us statically declare `v` of type []byte, therefore:
+    * no size check panics in `Some<n>`
+    * no pointer panics in `DeepEquals`
+* interface constraints using inferred types would let us statically limit the type of the input parameter to `Some<n>`
+    * no type mismatch panics in `Some<n>`
