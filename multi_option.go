@@ -42,17 +42,13 @@ func None2[T1, T2 any]() Option2[T1, T2] {
 //  1. T1 is not the larger of {T1, T2}
 //  2. T0 is not one of T1 or T2
 func Some2[T0, T1, T2 any](value T0) (o Option2[T1, T2]) {
-	var tag uint8
 	// Check static constraints first
 	t0, t1, t2 := reflect.TypeFor[T0](), reflect.TypeFor[T1](), reflect.TypeFor[T2]()
 	if t2.Size() > t1.Size() {
 		panic(fmt.Sprintf("bad type ordering; you must put %s (the largest) first", t2.String()))
 	}
 	switch t0 {
-	case t1:
-		tag = 1
-	case t2:
-		tag = 2
+	case t1, t2:
 	default:
 		panic(fmt.Sprintf("type %s is not in [%s, %s]", t0.String(), t1.String(), t2.String()))
 	}
@@ -68,12 +64,12 @@ func Some2[T0, T1, T2 any](value T0) (o Option2[T1, T2]) {
 		return Option2[T1, T2]{}
 	} else {
 		// pointer mangle o into an Option[T] so we can write its value
-		switch tag {
-		case 1:
+		switch t0 {
+		case t1:
 			m := (*Option[T1])(unsafe.Pointer(&o))
 			m.v = *(*T1)(unsafe.Pointer(&value))
 			m.t = m.v
-		case 2:
+		case t2:
 			m := (*Option[T2])(unsafe.Pointer(&o))
 			m.v = *(*T2)(unsafe.Pointer(&value))
 			m.t = m.v
