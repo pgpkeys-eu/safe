@@ -26,8 +26,8 @@ type Option2[T1, T2 any] struct {
 	//
 	// DO NOT SET STRUCT MEMBER VALUES DIRECTLY
 	//
-	tagField uint
-	_        T1 // not addressable, for safety
+	t any
+	_ T1
 }
 
 // None2() constructs a new None Option2
@@ -41,17 +41,18 @@ func None2[T1, T2 any]() Option2[T1, T2] {
 // Some2 will panic with a friendly error if either:
 //  1. T1 is not the larger of {T1, T2}
 //  2. T0 is not one of T1 or T2
-func Some2[T0, T1, T2 any](value T0) (o2 Option2[T1, T2]) {
-	// Check panicky constraints first
+func Some2[T0, T1, T2 any](value T0) (o Option2[T1, T2]) {
+	var tag uint8
+	// Check static constraints first
 	t0, t1, t2 := reflect.TypeFor[T0](), reflect.TypeFor[T1](), reflect.TypeFor[T2]()
 	if t2.Size() > t1.Size() {
 		panic(fmt.Sprintf("bad type ordering; you must put %s (the largest) first", t2.String()))
 	}
 	switch t0 {
 	case t1:
-		o2.tagField = 1
+		tag = 1
 	case t2:
-		o2.tagField = 2
+		tag = 2
 	default:
 		panic(fmt.Sprintf("type %s is not in [%s, %s]", t0.String(), t1.String(), t2.String()))
 	}
@@ -66,14 +67,16 @@ func Some2[T0, T1, T2 any](value T0) (o2 Option2[T1, T2]) {
 		kind == reflect.Func) && v.IsNil() {
 		return Option2[T1, T2]{}
 	} else {
-		// pointer mangle o2 into an Option[T] so we can address its unionField
-		switch o2.tagField {
+		// pointer mangle o into an Option[T] so we can write its value
+		switch tag {
 		case 1:
-			o := (*Option[T1])(unsafe.Pointer(&o2))
-			o.unionField = *(*T1)(unsafe.Pointer(&value))
+			m := (*Option[T1])(unsafe.Pointer(&o))
+			m.v = *(*T1)(unsafe.Pointer(&value))
+			m.t = m.v
 		case 2:
-			o := (*Option[T2])(unsafe.Pointer(&o2))
-			o.unionField = *(*T2)(unsafe.Pointer(&value))
+			m := (*Option[T2])(unsafe.Pointer(&o))
+			m.v = *(*T2)(unsafe.Pointer(&value))
+			m.t = m.v
 		}
 		return
 	}
@@ -83,23 +86,23 @@ func Some2[T0, T1, T2 any](value T0) (o2 Option2[T1, T2]) {
 func (o Option2[T1, T2]) Match() any {
 	// use pointer type mangling to avoid making copies
 	// this relies on the memory layouts of all types being identical
-	switch o.tagField {
-	case 1:
+	switch o.t.(type) {
+	case T1:
 		return *(*MatchSome[T1])(unsafe.Pointer(&o))
-	case 2:
+	case T2:
 		return *(*MatchSome[T2])(unsafe.Pointer(&o))
 	default:
-		return *(*MatchNone[T1])(unsafe.Pointer(&o))
+		return MatchNone{}
 	}
 }
 
 // IsNone checks directly if the Option2 is None.
 func (o Option2[T1, T2]) IsNone() bool {
-	return o.tagField == 0
+	return o.t == nil
 }
 
 // IsSome checks directly if the Option2 is Some (of any kind).
 // More complex tests should be done using type matching.
 func (o Option2[T1, T2]) IsSome() bool {
-	return o.tagField != 0
+	return o.t != nil
 }

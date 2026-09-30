@@ -2,7 +2,6 @@ package safe
 
 import (
 	"encoding/json"
-	"unsafe"
 )
 
 // We need to handle JSON serde specially.
@@ -14,12 +13,7 @@ import (
 
 // MarshalJSON takes a value receiver for maximum genericity
 func (o Option[T]) MarshalJSON() ([]byte, error) {
-	switch o.tagField {
-	case 1:
-		return json.Marshal(o.unionField)
-	default:
-		return []byte("{}"), nil
-	}
+	return json.Marshal(o.t)
 }
 
 // UnmarshalJSON takes a pointer receiver for maximum genericity
@@ -44,17 +38,8 @@ func (o *Option[T]) UnmarshalJSON(b []byte) (err error) {
 // Option2
 
 // MarshalJSON takes a value receiver for maximum genericity
-func (o2 Option2[T1, T2]) MarshalJSON() ([]byte, error) {
-	switch o2.tagField {
-	case 1:
-		o := (*Option[T1])(unsafe.Pointer(&o2))
-		return json.Marshal(o.unionField)
-	case 2:
-		o := (*Option[T2])(unsafe.Pointer(&o2))
-		return json.Marshal(o.unionField)
-	default:
-		return []byte("{}"), nil
-	}
+func (o Option2[T1, T2]) MarshalJSON() ([]byte, error) {
+	return json.Marshal(o.t)
 }
 
 // UnmarshalJSON takes a pointer receiver for maximum genericity

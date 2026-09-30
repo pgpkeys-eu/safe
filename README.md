@@ -88,10 +88,10 @@ default:
 }
 ```
 
-Note that in practice there is no need to explicitly handle `case MatchNone[T]`.
+Note that in practice there is no need to explicitly handle `case MatchNone`.
 
 `MatchSome[T]` contains a single public member `Some` which contains the original non-nil value.
-`MatchNone[T]` contains no public members and represents a nil value.
+`MatchNone` contains no members and represents a nil value.
 
 Other helper functions defined for `Option[T]`:
 
@@ -204,8 +204,8 @@ The above is the second type rule of `Option<n>`.
 Note that these runtime panics depend only on the type parameters, not on any values.
 They should therefore fire reliably in a test suite, so long as the code paths are covered.
 Unit tests are your friend.
-`Option<n>` follows the `safe` design pattern of moving any sharp edges into the constructors.
-This reduces the risk of panics, but not to zero - if this is a problem then `Option<n>` may not be for you.
+
+Note also that `reflect.DeepEquals` works fine on the happy path, but [can panic on the unhappy one](LIMITATIONS.md)
 
 Consuming an `Option<n>` is done the same way as for `Option`:
 
@@ -220,21 +220,18 @@ default:
 }
 ```
 
-None is represented by `MatchNone[T1]`, but as with `Option` there is no need to explicitly match it.
+None is represented by `MatchNone`, but as with `Option` there is no need to explicitly match it.
 
 Other helper functions defined for `Option<n>`:
 
 * IsSome() bool
 * IsNone() bool
 
-These mirror their Rust equivalents.
-There is no `UnwrapOr` or `UnwrapOrElse` because there is more than one non-None return type,
-so type matching is inevitable.
+There is no `UnwrapOr` or `UnwrapOrElse` because there is more than one Some return type,
+so type matching is unavoidable.
+There is also no `IsSome[T]() bool`, due to [limitations in Go](LIMITATIONS.md).
 
-Note: in Go, the generic types `Option[T1]`, `Option[T1, T2]`, `Option[T1, T2, T3]` are not distinct.
-We disambiguate them by name: `Option2`, `Option3` etc., each of which must be implemented separately.
 Only `Option2` is currently implemented.
-`Option3`, `Option4` and higher can be easily implemented in future, because the design constraints are the same for all `n>1`.
 
 ### JSON
 

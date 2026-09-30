@@ -16,24 +16,13 @@ type Option[T any] struct {
 	//
 	// DO NOT SET STRUCT MEMBER VALUES DIRECTLY
 	//
-	tagField   uint
-	unionField T
+	t any
+	v T
 }
 
-// MatchNone is a match type with no public members, used only for type matching.
+// MatchNone is a match type with no members, used only for type matching.
 // DO NOT construct directly using a struct literal, use None[T]() or Option[T]{} instead.
-type MatchNone[T any] struct {
-	//
-	// !!!!! DO NOT USE THIS STRUCT LITERAL !!!!!
-	//
-	// It is not safe to directly create MatchNone values
-	// Use None[T]() or Option[T]{} instead
-	//
-	// !!!!! DO NOT USE THIS STRUCT LITERAL !!!!!
-	//
-	tagField   uint
-	unionField T
-}
+type MatchNone struct{}
 
 // MatchSome is a match type with one public member Some, used only for type matching.
 // DO NOT construct directly using a struct literal, use Some() instead.
@@ -46,19 +35,19 @@ type MatchSome[T any] struct {
 	//
 	// !!!!! DO NOT USE THIS STRUCT LITERAL !!!!!
 	//
-	tagField uint
-	Some     T
+	_    any
+	Some T
 }
 
 // Match() converts an Option into a MatchSome or MatchNone.
 func (o Option[T]) Match() any {
 	// use pointer type mangling to avoid making copies
 	// this relies on the memory layouts of all three types being identical
-	switch o.tagField {
-	case 1:
+	switch o.t.(type) {
+	case T:
 		return *(*MatchSome[T])(unsafe.Pointer(&o))
 	default:
-		return *(*MatchNone[T])(unsafe.Pointer(&o))
+		return MatchNone{}
 	}
 }
 
@@ -69,7 +58,7 @@ func None[T any]() Option[T] {
 
 // Some() constructs an Option from an existing value.
 // If the value is nil it returns None, otherwise Some.
-func Some[T any](value T) Option[T] {
+func Some[T any](value T) (o Option[T]) {
 	v := reflect.ValueOf(value)
 	kind := v.Kind()
 	if (kind == reflect.Ptr ||
@@ -80,38 +69,36 @@ func Some[T any](value T) Option[T] {
 		kind == reflect.Func) && v.IsNil() {
 		return Option[T]{}
 	} else {
-		return Option[T]{1, value}
+		o.v = value
+		o.t = o.v
+		return
 	}
 }
 
 // IsNone checks directly if the Option is None.
 func (o Option[T]) IsNone() bool {
-	return o.tagField == 0
+	return o.t == nil
 }
 
 // IsSome checks directly if the Option is Some.
 func (o Option[T]) IsSome() bool {
-	return o.tagField != 0
+	return o.t != nil
 }
 
 // UnwrapOr returns the value of the Option if it is Some.
 // It returns a static value if the Option is None.
 func (o Option[T]) UnwrapOr(d *T) *T {
-	switch o.tagField {
-	case 1:
-		return &o.unionField
-	default:
+	if o.t == nil {
 		return d
 	}
+	return &o.v
 }
 
 // UnwrapOrElse returns the value of the Option if it is Some.
 // It returns a calculated value if the Option is None.
 func (o Option[T]) UnwrapOrElse(f func() *T) *T {
-	switch o.tagField {
-	case 1:
-		return &o.unionField
-	default:
+	if o.t == nil {
 		return f()
 	}
+	return &o.v
 }

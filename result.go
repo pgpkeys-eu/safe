@@ -16,8 +16,8 @@ type Result[T any] struct {
 	//
 	// DO NOT SET STRUCT MEMBER VALUES DIRECTLY
 	//
-	tagField   error
-	unionField T
+	t error
+	v T
 }
 
 // MatchOK is a match type with one public member OK, used only for type matching.
@@ -30,8 +30,8 @@ type MatchOK[T any] struct {
 	//
 	// !!!!! DO NOT USE THIS STRUCT LITERAL !!!!!
 	//
-	tagField error
-	OK       T
+	_  error
+	OK T
 }
 
 // MatchErr is a match type with one public member Err, used only for type matching.
@@ -44,15 +44,15 @@ type MatchErr[T any] struct {
 	//
 	// !!!!! DO NOT USE THIS STRUCT LITERAL !!!!!
 	//
-	Err        error
-	unionField T
+	Err error
+	_   T
 }
 
 // Match() converts a Result into a MatchOK or MatchErr.
 func (r Result[T]) Match() any {
 	// use pointer type mangling to avoid making copies
 	// this relies on the memory layouts of all three types being identical
-	if r.tagField == nil {
+	if r.t == nil {
 		return *(*MatchOK[T])(unsafe.Pointer(&r))
 	} else {
 		return *(*MatchErr[T])(unsafe.Pointer(&r))
@@ -61,7 +61,7 @@ func (r Result[T]) Match() any {
 
 // OK() constructs an OK Result from an existing value.
 func OK[T any](value T) (r Result[T]) {
-	r.unionField = value
+	r.v = value
 	return
 }
 
@@ -69,28 +69,28 @@ func OK[T any](value T) (r Result[T]) {
 // If the error is nil, an error containing the empty string is returned.
 func Err[T any](err error) (r Result[T]) {
 	if err == nil {
-		r.tagField = errors.New("")
+		r.t = errors.New("")
 	} else {
-		r.tagField = err
+		r.t = err
 	}
 	return
 }
 
 // IsOK checks directly if the Result is OK.
 func (r Result[T]) IsOK() bool {
-	return r.tagField == nil
+	return r.t == nil
 }
 
 // IsErr checks directly if the Result is Err.
 func (r Result[T]) IsErr() bool {
-	return r.tagField != nil
+	return r.t != nil
 }
 
 // UnwrapOr returns the value of the Result if it is OK.
 // It returns a static value if the Result is Err.
 func (r Result[T]) UnwrapOr(d *T) *T {
-	if r.tagField == nil {
-		return &r.unionField
+	if r.t == nil {
+		return &r.v
 	} else {
 		return d
 	}
@@ -99,8 +99,8 @@ func (r Result[T]) UnwrapOr(d *T) *T {
 // UnwrapOrElse returns the value of the Result if it is OK.
 // It returns a calculated value if the Result is Err.
 func (r Result[T]) UnwrapOrElse(f func() *T) *T {
-	if r.tagField == nil {
-		return &r.unionField
+	if r.t == nil {
+		return &r.v
 	} else {
 		return f()
 	}
