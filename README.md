@@ -192,10 +192,10 @@ so we must pass the input type as an additional type parameter `T0`.
 
 The above is the first type rule of `Option<n>`.
 
-Go also cannot tell at compile time what size `T1` and `T2` are - this can only be done at runtime using reflection.
-This means that it cannot tell which of `T1` or `T2` is bigger, and therefore how much memory to allocate to the Option struct.
-Instead, it allocates enough memory to hold a `T1`, and assumes that `T2` is the same size or smaller.
-`Some<n>` will check at runtime whether `T1` is the larger type, and if not it will panic with a friendly error message.
+Go also cannot determine at compile time what size `T1`, `T2` etc are - this can only be done at runtime using reflection.
+This means that it does not know which type is largest, and therefore how much memory to allocate to the Option struct.
+Instead, it allocates enough memory to hold a `T1`, and assumes that the other types are the same size or smaller.
+`Some<n>` will check at runtime whether `T1` is the largest type, and if not it will panic with a friendly error message.
 
 The above is the second type rule of `Option<n>`.
 
@@ -227,7 +227,8 @@ There is no `UnwrapOr` or `UnwrapOrElse` because there is more than one Some ret
 so type matching is unavoidable.
 There is also no `IsSome[T]() bool`, due to [limitations in Go](LIMITATIONS.md).
 
-Only `Option2` is currently implemented.
+Only `Option2` to `Option8` are currently implemented.
+If you need more, you should probably reconsider your life choices.
 
 ### JSON
 

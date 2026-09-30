@@ -1,106 +1,122 @@
 package safe
 
-import (
-	"fmt"
-	"reflect"
-	"unsafe"
-)
+// Lots of boilerplate glue to map Option<n> alias types onto the concrete optionN implementation
+// We only go up to Option8; if you need more then you should probably reconsider your life choices
 
-// Option2 represents a tagged-union of None and Some.
-// The zero literal Option2[T1, T2]{} represents None.
-//
-// BEWARE that T1 MUST be the type with the largest size.
-// If not, Some2() will panic on first use (but emit a friendly error).
-// Unit testing is your friend.
-//
-// BEWARE also that if T1 is (or contains) a pointer, reflect.DeepEquals() will attempt to
-// dereference that location in memory as a pointer, regardless of the type currently stored.
-// This can cause test suites to panic with a pointer error even if no pointers are being compared,
-// and DeepEquals() will emit a very UNfriendly error.
-type Option2[T1, T2 any] struct {
-	//
-	// The zero literal Option[T1, T2]{} may be safely used
-	// as the static equivalent of None2[T1, T2]()
-	//
-	// For everything else, use Some2[T1, T2](Some[T]())
-	//
-	// DO NOT SET STRUCT MEMBER VALUES DIRECTLY
-	//
-	t any
-	_ T1
-}
+type Option2[T1, T2 any] optionN[T1, T2, none, none, none, none, none, none]
+type Option3[T1, T2, T3 any] optionN[T1, T2, T3, none, none, none, none, none]
+type Option4[T1, T2, T3, T4 any] optionN[T1, T2, T3, T4, none, none, none, none]
+type Option5[T1, T2, T3, T4, T5 any] optionN[T1, T2, T3, T4, T5, none, none, none]
+type Option6[T1, T2, T3, T4, T5, T6 any] optionN[T1, T2, T3, T4, T5, T6, none, none]
+type Option7[T1, T2, T3, T4, T5, T6, T7 any] optionN[T1, T2, T3, T4, T5, T6, T7, none]
+type Option8[T1, T2, T3, T4, T5, T6, T7, T8 any] optionN[T1, T2, T3, T4, T5, T6, T7, T8]
 
-// None2() constructs a new None Option2
 func None2[T1, T2 any]() Option2[T1, T2] {
 	return Option2[T1, T2]{}
 }
-
-// Some2[T0, T1, T2] constructs an Option2[T1, T2] from an existing value of type T0.
-// If the value is nil it returns None, otherwise Some.
-//
-// Some2 will panic with a friendly error if either:
-//  1. T1 is not the larger of {T1, T2}
-//  2. T0 is not one of T1 or T2
-func Some2[T0, T1, T2 any](value T0) (o Option2[T1, T2]) {
-	// Check static constraints first
-	t0, t1, t2 := reflect.TypeFor[T0](), reflect.TypeFor[T1](), reflect.TypeFor[T2]()
-	if t2.Size() > t1.Size() {
-		panic(fmt.Sprintf("bad type ordering; you must put %s (the largest) first", t2.String()))
-	}
-	switch t0 {
-	case t1, t2:
-	default:
-		panic(fmt.Sprintf("type %s is not in [%s, %s]", t0.String(), t1.String(), t2.String()))
-	}
-	// OK, we can continue now
-	v := reflect.ValueOf(value)
-	kind := v.Kind()
-	if (kind == reflect.Ptr ||
-		kind == reflect.Interface ||
-		kind == reflect.Slice ||
-		kind == reflect.Map ||
-		kind == reflect.Chan ||
-		kind == reflect.Func) && v.IsNil() {
-		return Option2[T1, T2]{}
-	} else {
-		// pointer mangle o into an Option[T] so we can write its value
-		switch t0 {
-		case t1:
-			m := (*Option[T1])(unsafe.Pointer(&o))
-			m.v = *(*T1)(unsafe.Pointer(&value))
-			m.t = m.v
-		case t2:
-			m := (*Option[T2])(unsafe.Pointer(&o))
-			m.v = *(*T2)(unsafe.Pointer(&value))
-			m.t = m.v
-		}
-		return
-	}
+func None3[T1, T2, T3 any]() Option3[T1, T2, T3] {
+	return Option3[T1, T2, T3]{}
+}
+func None4[T1, T2, T3, T4 any]() Option4[T1, T2, T3, T4] {
+	return Option4[T1, T2, T3, T4]{}
+}
+func None5[T1, T2, T3, T4, T5 any]() Option5[T1, T2, T3, T4, T5] {
+	return Option5[T1, T2, T3, T4, T5]{}
+}
+func None6[T1, T2, T3, T4, T5, T6 any]() Option6[T1, T2, T3, T4, T5, T6] {
+	return Option6[T1, T2, T3, T4, T5, T6]{}
+}
+func None7[T1, T2, T3, T4, T5, T6, T7 any]() Option7[T1, T2, T3, T4, T5, T6, T7] {
+	return Option7[T1, T2, T3, T4, T5, T6, T7]{}
+}
+func None8[T1, T2, T3, T4, T5, T6, T7, T8 any]() Option8[T1, T2, T3, T4, T5, T6, T7, T8] {
+	return Option8[T1, T2, T3, T4, T5, T6, T7, T8]{}
 }
 
-// Match() converts an Option2 into a MatchSome or none.
+func Some2[T0, T1, T2 any](value T0) Option2[T1, T2] {
+	return (Option2[T1, T2])(someN[T0, T1, T2, none, none, none, none, none, none](value))
+}
+func Some3[T0, T1, T2, T3 any](value T0) Option3[T1, T2, T3] {
+	return (Option3[T1, T2, T3])(someN[T0, T1, T2, T3, none, none, none, none, none](value))
+}
+func Some4[T0, T1, T2, T3, T4 any](value T0) Option4[T1, T2, T3, T4] {
+	return (Option4[T1, T2, T3, T4])(someN[T0, T1, T2, T3, T4, none, none, none, none](value))
+}
+func Some5[T0, T1, T2, T3, T4, T5 any](value T0) Option5[T1, T2, T3, T4, T5] {
+	return (Option5[T1, T2, T3, T4, T5])(someN[T0, T1, T2, T3, T4, T5, none, none, none](value))
+}
+func Some6[T0, T1, T2, T3, T4, T5, T6 any](value T0) Option6[T1, T2, T3, T4, T5, T6] {
+	return (Option6[T1, T2, T3, T4, T5, T6])(someN[T0, T1, T2, T3, T4, T5, T6, none, none](value))
+}
+func Some7[T0, T1, T2, T3, T4, T5, T6, T7 any](value T0) Option7[T1, T2, T3, T4, T5, T6, T7] {
+	return (Option7[T1, T2, T3, T4, T5, T6, T7])(someN[T0, T1, T2, T3, T4, T5, T6, T7, none](value))
+}
+func Some8[T0, T1, T2, T3, T4, T5, T6, T7, T8 any](value T0) Option8[T1, T2, T3, T4, T5, T6, T7, T8] {
+	return (Option8[T1, T2, T3, T4, T5, T6, T7, T8])(someN[T0, T1, T2, T3, T4, T5, T6, T7, T8](value))
+}
+
 func (o Option2[T1, T2]) Match() any {
-	// use pointer type mangling to avoid making copies
-	// this relies on the memory layouts of Option and MatchSome being identical
-	switch o.t.(type) {
-	case nil:
-		return none{} // check none first for efficiency
-	case T1:
-		return *(*MatchSome[T1])(unsafe.Pointer(&o))
-	case T2:
-		return *(*MatchSome[T2])(unsafe.Pointer(&o))
-	default:
-		return none{} // should never get here but just in case
-	}
+	return (optionN[T1, T2, none, none, none, none, none, none])(o).match()
+}
+func (o Option3[T1, T2, T3]) Match() any {
+	return (optionN[T1, T2, T3, none, none, none, none, none])(o).match()
+}
+func (o Option4[T1, T2, T3, T4]) Match() any {
+	return (optionN[T1, T2, T3, T4, none, none, none, none])(o).match()
+}
+func (o Option5[T1, T2, T3, T4, T5]) Match() any {
+	return (optionN[T1, T2, T3, T4, T5, none, none, none])(o).match()
+}
+func (o Option6[T1, T2, T3, T4, T5, T6]) Match() any {
+	return (optionN[T1, T2, T3, T4, T5, T6, none, none])(o).match()
+}
+func (o Option7[T1, T2, T3, T4, T5, T6, T7]) Match() any {
+	return (optionN[T1, T2, T3, T4, T5, T6, T7, none])(o).match()
+}
+func (o Option8[T1, T2, T3, T4, T5, T6, T7, T8]) Match() any {
+	return (optionN[T1, T2, T3, T4, T5, T6, T7, T8])(o).match()
 }
 
-// IsNone checks directly if the Option2 is None.
+func (o Option2[T1, T2]) IsSome() bool {
+	return o.t != nil
+}
+func (o Option3[T1, T2, T3]) IsSome() bool {
+	return o.t != nil
+}
+func (o Option4[T1, T2, T3, T4]) IsSome() bool {
+	return o.t != nil
+}
+func (o Option5[T1, T2, T3, T4, T5]) IsSome() bool {
+	return o.t != nil
+}
+func (o Option6[T1, T2, T3, T4, T5, T6]) IsSome() bool {
+	return o.t != nil
+}
+func (o Option7[T1, T2, T3, T4, T5, T6, T7]) IsSome() bool {
+	return o.t != nil
+}
+func (o Option8[T1, T2, T3, T4, T5, T6, T7, T8]) IsSome() bool {
+	return o.t != nil
+}
+
 func (o Option2[T1, T2]) IsNone() bool {
 	return o.t == nil
 }
-
-// IsSome checks directly if the Option2 is Some (of any kind).
-// More complex tests should be done using type matching.
-func (o Option2[T1, T2]) IsSome() bool {
-	return o.t != nil
+func (o Option3[T1, T2, T3]) IsNone() bool {
+	return o.t == nil
+}
+func (o Option4[T1, T2, T3, T4]) IsNone() bool {
+	return o.t == nil
+}
+func (o Option5[T1, T2, T3, T4, T5]) IsNone() bool {
+	return o.t == nil
+}
+func (o Option6[T1, T2, T3, T4, T5, T6]) IsNone() bool {
+	return o.t == nil
+}
+func (o Option7[T1, T2, T3, T4, T5, T6, T7]) IsNone() bool {
+	return o.t == nil
+}
+func (o Option8[T1, T2, T3, T4, T5, T6, T7, T8]) IsNone() bool {
+	return o.t == nil
 }

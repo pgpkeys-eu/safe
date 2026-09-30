@@ -6,22 +6,7 @@ import (
 )
 
 // Option represents a tagged-union of None and Some.
-// The zero literal Option[T]{} represents None.
-type Option[T any] struct {
-	//
-	// The zero literal Option[T]{} may be safely used
-	// as the static equivalent of None[T]()
-	//
-	// For everything else, use Some[T]()
-	//
-	// DO NOT SET STRUCT MEMBER VALUES DIRECTLY
-	//
-	t any
-	v T
-}
-
-// none is a private type with no members, used when we need a non-nil but unusable type.
-type none struct{}
+type Option[T any] optionN[T, none, none, none, none, none, none, none]
 
 // MatchSome is a match type with one public member Some, used only for type matching.
 // DO NOT construct directly using a struct literal, use Some() instead.

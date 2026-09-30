@@ -16,10 +16,8 @@ Implementing `Option<n>` stretches the definition of `safe`ty somewhat, mainly d
 **Naming Things**
 
 In Go, the generic types `Option[T1]`, `Option[T1, T2]`, `Option[T1, T2, T3]` are not distinct.
-We disambiguate them by name: `Option2`, `Option3` etc., each of which must be implemented separately.
-
-Only `Option2` is currently implemented.
-`Option3`, `Option4` and higher can be easily implemented in future, because the design constraints are the same for all `n>1`.
+We disambiguate them by name: `Option2`, `Option3` etc., each of which must be declared separately.
+We use type aliasing to share a single implementation between all `Option<n>` types, however each one must be explicitly mapped onto the generic implementation using glue methods.
 
 Also, struct methods cannot have type parameters, so we cannot test for a specific type of Some using a method like `func (Option2[T1, T2]) IsSome[T0]() bool`.
 We could in theory implement a top-level function `func IsSome[T0, T1, T2 any](Option2[T1, T2]) bool` but that's just *ugly*.
