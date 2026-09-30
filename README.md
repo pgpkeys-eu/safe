@@ -31,7 +31,7 @@ This design choice has several advantages:
 
 Return values should therefore be difficult or impossible to use unsafely, so long as `Option` and `Result` are used consistently in function signatures.
 For convenience, helper functions are provided to enable use of the embedded values without type matching (e.g. `UnwrapOr()`).
-There is no `Unwrap()` function by design, therefore there are no panics.
+There is no `Unwrap()` function by design, therefore there are no panics at consumption time.
 
 This design differs from earlier efforts, which implement tagged unions as interfaces.
 While this is conceptually intuitive, interfaces are nillable types and so cannot have safe default values.
