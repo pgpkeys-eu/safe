@@ -6,44 +6,31 @@ import (
 )
 
 // Result represents a tagged-union of OK and Err.
-// The zero literal Result[T]{} represents an OK containing the zero value of T.
-type Result[T any] struct {
-	//
-	// The zero literal Result[T]{} may be safely used
-	// as the static equivalent of OK[T](nil)
-	//
-	// For everything else, use OK[T]() or Err[T]() instead
-	//
-	// DO NOT SET STRUCT MEMBER VALUES DIRECTLY
-	//
-	t error
-	v T
+// Its default value represents an OK containing the default value of T.
+// Result values SHOULD be created by calling either OK() or Err().
+// DO NOT construct non-zero Result literals directly.
+type Result[T any] result[T]
+
+// Hide the internals slightly by defining Result as a type alias, like Option.
+// TODO: why can we not alias Result to optionN? Matching throws a wobbler.
+// error is an interface, any is an interface, are they not the same size?
+type result[T any] struct {
+	tag   error
+	value T
 }
 
-// MatchOK is a match type with one public member OK, used only for type matching.
-// DO NOT construct directly using a struct literal, use OK() or Result[T]{} instead.
+// MatchOK is a match type with one public member OK.
+// It MUST be used ONLY for type matching the return value of Match().
+// DO NOT construct directly using a struct literal, use OK() to create a Result.
 type MatchOK[T any] struct {
-	//
-	// !!!!! DO NOT USE THIS STRUCT LITERAL !!!!!
-	//
-	// use OK[T]() or Result[T]{} instead
-	//
-	// !!!!! DO NOT USE THIS STRUCT LITERAL !!!!!
-	//
 	_  error
 	OK T
 }
 
-// MatchErr is a match type with one public member Err, used only for type matching.
-// DO NOT construct directly using a struct literal, use Err() instead.
+// MatchErr is a match type with one public member Err.
+// It MUST be used ONLY for type matching the return value of Match().
+// DO NOT construct directly using a struct literal, use Err() to create a Result.
 type MatchErr[T any] struct {
-	//
-	// !!!!! DO NOT USE THIS STRUCT LITERAL !!!!!
-	//
-	// use Err[T]() instead
-	//
-	// !!!!! DO NOT USE THIS STRUCT LITERAL !!!!!
-	//
 	Err error
 	_   T
 }
@@ -52,7 +39,7 @@ type MatchErr[T any] struct {
 func (r Result[T]) Match() any {
 	// use pointer type mangling to avoid making copies
 	// this relies on the memory layouts of all three types being identical
-	if r.t == nil {
+	if r.tag == nil {
 		return *(*MatchOK[T])(unsafe.Pointer(&r))
 	} else {
 		return *(*MatchErr[T])(unsafe.Pointer(&r))
@@ -61,7 +48,7 @@ func (r Result[T]) Match() any {
 
 // OK() constructs an OK Result from an existing value.
 func OK[T any](value T) (r Result[T]) {
-	r.v = value
+	r.value = value
 	return
 }
 
@@ -69,28 +56,28 @@ func OK[T any](value T) (r Result[T]) {
 // If the error is nil, an error containing the empty string is returned.
 func Err[T any](err error) (r Result[T]) {
 	if err == nil {
-		r.t = errors.New("")
+		r.tag = errors.New("")
 	} else {
-		r.t = err
+		r.tag = err
 	}
 	return
 }
 
 // IsOK checks directly if the Result is OK.
 func (r Result[T]) IsOK() bool {
-	return r.t == nil
+	return r.tag == nil
 }
 
 // IsErr checks directly if the Result is Err.
 func (r Result[T]) IsErr() bool {
-	return r.t != nil
+	return r.tag != nil
 }
 
 // UnwrapOr returns the value of the Result if it is OK.
 // It returns a static value if the Result is Err.
 func (r Result[T]) UnwrapOr(d *T) *T {
-	if r.t == nil {
-		return &r.v
+	if r.tag == nil {
+		return &r.value
 	} else {
 		return d
 	}
@@ -99,8 +86,8 @@ func (r Result[T]) UnwrapOr(d *T) *T {
 // UnwrapOrElse returns the value of the Result if it is OK.
 // It returns a calculated value if the Result is Err.
 func (r Result[T]) UnwrapOrElse(f func() *T) *T {
-	if r.t == nil {
-		return &r.v
+	if r.tag == nil {
+		return &r.value
 	} else {
 		return f()
 	}

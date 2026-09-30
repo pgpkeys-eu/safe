@@ -7,7 +7,7 @@ import (
 	"unsafe"
 )
 
-// optionN represents a tagged-union of None and Some.
+// optionN represents a tagged-union of None and N Some[T]s.
 // The zero literal optionN[T1, T2, T3, T4, T5, T6, T7, T8]{} represents None.
 //
 // BEWARE that T1 MUST be the type with the largest size.
@@ -19,8 +19,8 @@ import (
 // This can cause test suites to panic with a pointer error even if no pointers are being compared,
 // and DeepEquals() will emit a very UNfriendly error.
 type optionN[T1, T2, T3, T4, T5, T6, T7, T8 any] struct {
-	t any
-	v T1
+	tag   any
+	value T1
 }
 
 // xx is a private type with no members, used when we need a non-nil but unusable type.
@@ -61,9 +61,9 @@ func someN[T0, T1, T2, T3, T4, T5, T6, T7, T8 any](value T0) (o optionN[T1, T2, 
 		for i := 0; i < n; i++ {
 			names[i] = t[i].String()
 		}
-		nameList := strings.Join(names[1:n], ", ")
-		panic(fmt.Sprintf("type %s is not in [%s]", names[0], nameList))
+		panic(fmt.Sprintf("type %s is not in [%s]", names[0], strings.Join(names[1:n], ", ")))
 	}
+
 	// OK, we can continue now
 	v := reflect.ValueOf(value)
 	kind := v.Kind()
@@ -75,40 +75,40 @@ func someN[T0, T1, T2, T3, T4, T5, T6, T7, T8 any](value T0) (o optionN[T1, T2, 
 		kind == reflect.Func) && v.IsNil() {
 		return optionN[T1, T2, T3, T4, T5, T6, T7, T8]{}
 	} else {
-		// pointer mangle o into an Option[T] so we can write its value
+		// pointer mangle o and value so that the types match
 		switch t[0] {
 		case t[1]:
-			m := (*Option[T1])(unsafe.Pointer(&o))
-			m.v = *(*T1)(unsafe.Pointer(&value))
-			m.t = m.v
+			// no need to pointer mangle o, o.value is T1 by default
+			o.value = *(*T1)(unsafe.Pointer(&value))
+			o.tag = o.value
 		case t[2]:
 			m := (*Option[T2])(unsafe.Pointer(&o))
-			m.v = *(*T2)(unsafe.Pointer(&value))
-			m.t = m.v
+			m.value = *(*T2)(unsafe.Pointer(&value))
+			m.tag = m.value
 		case t[3]:
 			m := (*Option[T3])(unsafe.Pointer(&o))
-			m.v = *(*T3)(unsafe.Pointer(&value))
-			m.t = m.v
+			m.value = *(*T3)(unsafe.Pointer(&value))
+			m.tag = m.value
 		case t[4]:
 			m := (*Option[T4])(unsafe.Pointer(&o))
-			m.v = *(*T4)(unsafe.Pointer(&value))
-			m.t = m.v
+			m.value = *(*T4)(unsafe.Pointer(&value))
+			m.tag = m.value
 		case t[5]:
 			m := (*Option[T5])(unsafe.Pointer(&o))
-			m.v = *(*T5)(unsafe.Pointer(&value))
-			m.t = m.v
+			m.value = *(*T5)(unsafe.Pointer(&value))
+			m.tag = m.value
 		case t[6]:
 			m := (*Option[T6])(unsafe.Pointer(&o))
-			m.v = *(*T6)(unsafe.Pointer(&value))
-			m.t = m.v
+			m.value = *(*T6)(unsafe.Pointer(&value))
+			m.tag = m.value
 		case t[7]:
 			m := (*Option[T7])(unsafe.Pointer(&o))
-			m.v = *(*T7)(unsafe.Pointer(&value))
-			m.t = m.v
+			m.value = *(*T7)(unsafe.Pointer(&value))
+			m.tag = m.value
 		case t[8]:
 			m := (*Option[T8])(unsafe.Pointer(&o))
-			m.v = *(*T8)(unsafe.Pointer(&value))
-			m.t = m.v
+			m.value = *(*T8)(unsafe.Pointer(&value))
+			m.tag = m.value
 		}
 		return
 	}
@@ -118,7 +118,7 @@ func someN[T0, T1, T2, T3, T4, T5, T6, T7, T8 any](value T0) (o optionN[T1, T2, 
 func (o optionN[T1, T2, T3, T4, T5, T6, T7, T8]) match() any {
 	// use pointer type mangling to avoid making copies
 	// this relies on the memory layouts of optionN and MatchSome being identical
-	switch o.t.(type) {
+	switch o.tag.(type) {
 	case nil:
 		return xx{} // check nil first for efficiency
 	case T1:

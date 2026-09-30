@@ -13,28 +13,28 @@ import (
 
 // MarshalJSON takes a value receiver for maximum genericity
 func (o Option[T]) MarshalJSON() ([]byte, error) {
-	return json.Marshal(o.t)
+	return json.Marshal(o.tag)
 }
 func (o Option2[T1, T2]) MarshalJSON() ([]byte, error) {
-	return json.Marshal(o.t)
+	return json.Marshal(o.tag)
 }
 func (o Option3[T1, T2, T3]) MarshalJSON() ([]byte, error) {
-	return json.Marshal(o.t)
+	return json.Marshal(o.tag)
 }
 func (o Option4[T1, T2, T3, T4]) MarshalJSON() ([]byte, error) {
-	return json.Marshal(o.t)
+	return json.Marshal(o.tag)
 }
 func (o Option5[T1, T2, T3, T4, T5]) MarshalJSON() ([]byte, error) {
-	return json.Marshal(o.t)
+	return json.Marshal(o.tag)
 }
 func (o Option6[T1, T2, T3, T4, T5, T6]) MarshalJSON() ([]byte, error) {
-	return json.Marshal(o.t)
+	return json.Marshal(o.tag)
 }
 func (o Option7[T1, T2, T3, T4, T5, T6, T7]) MarshalJSON() ([]byte, error) {
-	return json.Marshal(o.t)
+	return json.Marshal(o.tag)
 }
 func (o Option8[T1, T2, T3, T4, T5, T6, T7, T8]) MarshalJSON() ([]byte, error) {
-	return json.Marshal(o.t)
+	return json.Marshal(o.tag)
 }
 
 // UnmarshalJSON takes a pointer receiver for maximum genericity

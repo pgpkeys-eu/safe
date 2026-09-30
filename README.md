@@ -27,7 +27,7 @@ This design choice has several advantages:
 * uninitialised variables are safe by default
 * violations of the usage guidelines are highly visible, and can be checked statically
 * temptation to stray from the path is encountered when values are generated (rare), but not when they are consumed (common)
-* struct literals have an unintuitive format and scary inline documentation, discouraging their use
+* struct literals have an unintuitive format and obscure inline documentation, discouraging their use
 
 Return values should therefore be difficult or impossible to use unsafely, so long as `Option` and `Result` are used consistently in function signatures.
 For convenience, helper functions are provided to enable use of the embedded values without type matching (e.g. `UnwrapOr()`).

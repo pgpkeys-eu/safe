@@ -1,5 +1,10 @@
 # Design Limitations
 
+You cannot prevent people from using struct literals to generate arbitrary objects with inconsistent internal states in Go.
+You can only provide big scary warnings in the contract and urge them to use constructors instead.
+
+On the other hand, once you have a well-formed object, Go does a reasonable job of preventing unauthorised modifications.
+
 ## Option[T]
 
 Unlike Rust, the underlying Some types are not considered to be instances of `Option` by the Go type system, and None is a special value rather than a type.
