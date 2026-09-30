@@ -78,17 +78,19 @@ func Some2[T0, T1, T2 any](value T0) (o Option2[T1, T2]) {
 	}
 }
 
-// Match() converts an Option2 into a MatchSome or MatchNone.
+// Match() converts an Option2 into a MatchSome or none.
 func (o Option2[T1, T2]) Match() any {
 	// use pointer type mangling to avoid making copies
 	// this relies on the memory layouts of Option and MatchSome being identical
 	switch o.t.(type) {
+	case nil:
+		return none{} // check none first for efficiency
 	case T1:
 		return *(*MatchSome[T1])(unsafe.Pointer(&o))
 	case T2:
 		return *(*MatchSome[T2])(unsafe.Pointer(&o))
 	default:
-		return MatchNone{}
+		return none{} // should never get here but just in case
 	}
 }
 

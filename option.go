@@ -20,9 +20,8 @@ type Option[T any] struct {
 	v T
 }
 
-// MatchNone is a match type with no members, used only for type matching.
-// DO NOT construct directly using a struct literal, use None[T]() or Option[T]{} instead.
-type MatchNone struct{}
+// none is a private type with no members, used when we need a non-nil but unusable type.
+type none struct{}
 
 // MatchSome is a match type with one public member Some, used only for type matching.
 // DO NOT construct directly using a struct literal, use Some() instead.
@@ -39,7 +38,7 @@ type MatchSome[T any] struct {
 	Some T
 }
 
-// Match() converts an Option into a MatchSome or MatchNone.
+// Match() converts an Option into a MatchSome or none.
 func (o Option[T]) Match() any {
 	// use pointer type mangling to avoid making copies
 	// this relies on the memory layouts of Option and MatchSome being identical
@@ -47,7 +46,7 @@ func (o Option[T]) Match() any {
 	case T:
 		return *(*MatchSome[T])(unsafe.Pointer(&o))
 	default:
-		return MatchNone{}
+		return none{}
 	}
 }
 

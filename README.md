@@ -19,8 +19,8 @@ The chosen design forces consumers to use either type matching or helper functio
 * the zero literals `Option[T]{}` and `Result[T]{}` represent safe and meaningful default values
 * all members of tagged unions are private
 * tagged unions must be explicitly converted to a match type before type matching
-* the match types `MatchNone`, `MatchSome`, `MatchOK` and `MatchErr` are used ephemerally for type matching, and must not be directly constructed
-* `MatchNone` is inert, while the other match types expose the public members `Some`, `OK` or `Err` as appropriate
+* the match types `MatchSome`, `MatchOK` and `MatchErr` are used ephemerally for type matching, and must not be directly constructed
+* each match type exposes a single public member `Some`, `OK` or `Err` as appropriate
 
 This design choice has several advantages:
 
@@ -88,10 +88,8 @@ default:
 }
 ```
 
-Note that in practice there is no need to explicitly handle `case MatchNone`.
-
 `MatchSome[T]` contains a single public member `Some` which contains the original non-nil value.
-`MatchNone` contains no members and represents a nil value.
+The None case is handled by `default`.
 
 Other helper functions defined for `Option[T]`:
 
@@ -219,8 +217,6 @@ default:
     fmt.printf("None")
 }
 ```
-
-None is represented by `MatchNone`, but as with `Option` there is no need to explicitly match it.
 
 Other helper functions defined for `Option<n>`:
 
