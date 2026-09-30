@@ -174,7 +174,7 @@ return Err(errors.New("help"))
 `Option<n>[T1, T2, ...]` is the generalisation of `Option[T]` to `n` Some types.
 It is the equivalent of a generic (i.e. Rust-style) tagged union, with the exception that it always permits None (the zero value).
 
-It comes with some additional caveats, due to limitations of Go's type system.
+It comes with some additional caveats, due to [limitations of Go's type system](LIMITATIONS.md).
 Unlike `Option[T]` and `Result[T]` it MAY panic on construction if the two type rules (given below) are not followed.
 A basic unit test suite should trigger such a panic immediately, and the error message will describe the solution.
 

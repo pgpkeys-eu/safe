@@ -18,10 +18,13 @@ We disambiguate them by name: `Option2`, `Option3` etc., each of which must be i
 Only `Option2` is currently implemented.
 `Option3`, `Option4` and higher can be easily implemented in future, because the design constraints are the same for all `n>1`.
 
-Also, struct methods cannot have type parameters, so we cannot implement `func (Option2[T1, T2]) IsSome[T0]() bool`.
+Also, struct methods cannot have type parameters, so we cannot test for a specific type of Some using a method like `func (Option2[T1, T2]) IsSome[T0]() bool`.
 We could in theory implement a top-level function `func IsSome[T0, T1, T2 any](Option2[T1, T2]) bool` but that's just *ugly*.
 
-**Deep Reflection** 
+Type parameters cannot be nested, so for example we can't define `func Some2[T0 any, Option[T1, T2 any]](value T0) Option[T1, T2]`.
+This makes it difficult to remember the order of type parameters, particularly when there are three or more.
+
+**Deep Reflection**
 
 If T1 is (or contains) a pointer, `reflect.DeepEquals()` will attempt to dereference that location in memory as a pointer, regardless of the type currently stored.
 This can cause test suites to panic with a pointer error even if no actual pointers are being compared.
@@ -33,7 +36,10 @@ If you need to use `DeepEquals`, there are several precautions that you can take
 
 **Panic at the Disco**
 
-It may seem like `Some2` *should* be implementable as follows:
+Size and type mismatch panics would appear inevitable with the current feature set of the base Go language (as of 1.26).
+The current design tries to expose them as soon and as consistently as possible, so that they can be caught in unit testing.
+
+It may seem like `Some2` *should* be implementable using type constraints as follows:
 
 ```
 func Some2[T1, T2 any](value interface{ ~T1 | ~T2 }) (o Option2[T1, T2]) {
@@ -41,7 +47,7 @@ func Some2[T1, T2 any](value interface{ ~T1 | ~T2 }) (o Option2[T1, T2]) {
 }
 ```
 
-But this fails to compile because `interface{ ... }` can only contain static types, not inferred ones.
+But this fails to compile because interfaces can only be constrained to static types, not inferred ones.
 
 Similarly, if you are familiar with other languages such as C it may seem possible to define `Option2` without assuming that `T1` is larger:
 
@@ -54,7 +60,7 @@ type Option2[T1, T2 any] struct {
 
 This fails to compile because in Go, `Sizeof` is evaluated at runtime, unlike in C where it, and the conditional expression containing it, can be evaluated at compile time.
 
-The following declaration also fails for the same reason:
+The following simpler declaration also fails for the same reason:
 
 ```
 type Option2[T1, T2 any] struct {
@@ -68,25 +74,26 @@ But we can't have nice things.
 
 **Nice Things**
 
-OK, we can have some.
+OK, maybe we can have some nice things.
 
-For example, using interfaces as the type tag means we can point the interface at the value field in order to set the tag.
-This may seem pointless - we know where the value field is without having to dereference the pointer - but it has some nice properties.
+Using type `any` for the type tag means we can point the tag interface at its own value field.
+This may seem excessive - we know where the value field is without having to dereference the pointer - but it has some nice properties.
 
-Firstly, it gives us a Go-native method to store the type of the stored value.
-We can type match on the tag to discover the type of the stored value, instead of hand-rolling our own mapping of tags to types.
+Firstly, by using pointer mangling, the tag interface implicitly remembers the dynamic type of the stored value.
+We can type match on the tag to discover the dynamic type, instead of hand-rolling our own mapping of tags to types.
 
-Pointing the tag interface at the value means there is always a pointer pointing to the stored struct, and because the pointer is annotated with the correct type,
-the garbage collector knows the structure pointed to, including if it has pointer members, and so doesn't clean up second-order pointer targets prematurely.
+Second, pointing the tag interface at the value means there is always a valid pointer to the stored value for the lifetime of the Option.
+Because interfaces are type-annotated, the garbage collector knows the dynamic type of the target,
+including whether it has pointer members, and so won't double-free any second-order pointer targets.
 
-And finally, it allows us to call MarshalJSON directly on the tag, which falls through to the concrete type below, with correct typing.
+And finally, it allows us to call MarshalJSON directly on the tag interface, which falls through to the value below, with the correct dynamic typing.
 This avoids a LOT of boilerplate type matching code.
 
 # Pretty Please With a Cherry on Top
 
 There are a few small (and independently defensible) additions to the Go core language that would eliminate the panics in `Option<n>`:
 
-* compile-time evaluation of `Sizeof` and simple expressions (as in C) would let us statically declare `v` of type []byte, therefore:
+* compile-time evaluation of `Sizeof` and simple expressions (as in C) would let us statically declare a value field of type `[]byte`, therefore:
     * no size check panics in `Some<n>`
     * no pointer panics in `DeepEquals`
 * interface constraints using inferred types would let us statically limit the type of the input parameter to `Some<n>`
