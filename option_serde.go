@@ -15,29 +15,6 @@ import (
 func (o Option[T]) MarshalJSON() ([]byte, error) {
 	return json.Marshal(o.t)
 }
-
-// UnmarshalJSON takes a pointer receiver for maximum genericity
-func (o *Option[T]) UnmarshalJSON(b []byte) (err error) {
-	var try0 struct{}
-	var try1 T
-	// This will succeed iff b == "{}", which represents None
-	err = json.Unmarshal(b, &try0)
-	if err == nil {
-		*o = Option[T]{}
-		return
-	}
-	// Otherwise we read the value directly
-	err = json.Unmarshal(b, &try1)
-	if err == nil {
-		*o = Some(try1)
-		return
-	}
-	return
-}
-
-// OptionN
-
-// MarshalJSON takes a value receiver for maximum genericity
 func (o Option2[T1, T2]) MarshalJSON() ([]byte, error) {
 	return json.Marshal(o.t)
 }
@@ -121,6 +98,10 @@ func (o *optionN[T1, T2, T3, T4, T5, T6, T7, T8]) UnmarshalJSON(b []byte) (err e
 	return
 }
 
+func (o *Option[T1]) UnmarshalJSON(b []byte) (err error) {
+	err = (*optionN[T1, none, none, none, none, none, none, none])(o).UnmarshalJSON(b)
+	return
+}
 func (o *Option2[T1, T2]) UnmarshalJSON(b []byte) (err error) {
 	err = (*optionN[T1, T2, none, none, none, none, none, none])(o).UnmarshalJSON(b)
 	return
