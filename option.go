@@ -42,7 +42,7 @@ type MatchSome[T any] struct {
 // Match() converts an Option into a MatchSome or MatchNone.
 func (o Option[T]) Match() any {
 	// use pointer type mangling to avoid making copies
-	// this relies on the memory layouts of all three types being identical
+	// this relies on the memory layouts of Option and MatchSome being identical
 	switch o.t.(type) {
 	case T:
 		return *(*MatchSome[T])(unsafe.Pointer(&o))
