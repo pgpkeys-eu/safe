@@ -99,31 +99,31 @@ func (o *optionN[T1, T2, T3, T4, T5, T6, T7, T8]) UnmarshalJSON(b []byte) (err e
 }
 
 func (o *Option[T1]) UnmarshalJSON(b []byte) (err error) {
-	err = (*optionN[T1, none, none, none, none, none, none, none])(o).UnmarshalJSON(b)
+	err = (*optionN[T1, xx, xx, xx, xx, xx, xx, xx])(o).UnmarshalJSON(b)
 	return
 }
 func (o *Option2[T1, T2]) UnmarshalJSON(b []byte) (err error) {
-	err = (*optionN[T1, T2, none, none, none, none, none, none])(o).UnmarshalJSON(b)
+	err = (*optionN[T1, T2, xx, xx, xx, xx, xx, xx])(o).UnmarshalJSON(b)
 	return
 }
 func (o *Option3[T1, T2, T3]) UnmarshalJSON(b []byte) (err error) {
-	err = (*optionN[T1, T2, T3, none, none, none, none, none])(o).UnmarshalJSON(b)
+	err = (*optionN[T1, T2, T3, xx, xx, xx, xx, xx])(o).UnmarshalJSON(b)
 	return
 }
 func (o *Option4[T1, T2, T3, T4]) UnmarshalJSON(b []byte) (err error) {
-	err = (*optionN[T1, T2, T3, T4, none, none, none, none])(o).UnmarshalJSON(b)
+	err = (*optionN[T1, T2, T3, T4, xx, xx, xx, xx])(o).UnmarshalJSON(b)
 	return
 }
 func (o *Option5[T1, T2, T3, T4, T5]) UnmarshalJSON(b []byte) (err error) {
-	err = (*optionN[T1, T2, T3, T4, T5, none, none, none])(o).UnmarshalJSON(b)
+	err = (*optionN[T1, T2, T3, T4, T5, xx, xx, xx])(o).UnmarshalJSON(b)
 	return
 }
 func (o *Option6[T1, T2, T3, T4, T5, T6]) UnmarshalJSON(b []byte) (err error) {
-	err = (*optionN[T1, T2, T3, T4, T5, T6, none, none])(o).UnmarshalJSON(b)
+	err = (*optionN[T1, T2, T3, T4, T5, T6, xx, xx])(o).UnmarshalJSON(b)
 	return
 }
 func (o *Option7[T1, T2, T3, T4, T5, T6, T7]) UnmarshalJSON(b []byte) (err error) {
-	err = (*optionN[T1, T2, T3, T4, T5, T6, T7, none])(o).UnmarshalJSON(b)
+	err = (*optionN[T1, T2, T3, T4, T5, T6, T7, xx])(o).UnmarshalJSON(b)
 	return
 }
 func (o *Option8[T1, T2, T3, T4, T5, T6, T7, T8]) UnmarshalJSON(b []byte) (err error) {

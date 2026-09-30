@@ -5,10 +5,14 @@ import (
 	"unsafe"
 )
 
-// Option represents a tagged-union of None and Some.
-type Option[T any] optionN[T, none, none, none, none, none, none, none]
+// Option uses optionN as its underlying type, but optionN has to handle
+// special cases such as type and size mismatches that do not apply to Option.
+// Some and Match are therefore implemented separately here and not aliased.
 
-// MatchSome is a match type with one public member Some, used only for type matching.
+// Option represents a tagged-union of None and Some.
+type Option[T any] optionN[T, xx, xx, xx, xx, xx, xx, xx]
+
+// MatchSome is a public match type with one public member Some, used only for type matching.
 // DO NOT construct directly using a struct literal, use Some() instead.
 type MatchSome[T any] struct {
 	//
@@ -23,7 +27,7 @@ type MatchSome[T any] struct {
 	Some T
 }
 
-// Match() converts an Option into a MatchSome or none.
+// Match() converts an Option into a MatchSome or an unusable type (representing None).
 func (o Option[T]) Match() any {
 	// use pointer type mangling to avoid making copies
 	// this relies on the memory layouts of Option and MatchSome being identical
@@ -31,7 +35,7 @@ func (o Option[T]) Match() any {
 	case T:
 		return *(*MatchSome[T])(unsafe.Pointer(&o))
 	default:
-		return none{}
+		return xx{}
 	}
 }
 

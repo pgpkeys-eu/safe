@@ -3,6 +3,7 @@ package safe
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"unsafe"
 )
 
@@ -22,8 +23,9 @@ type optionN[T1, T2, T3, T4, T5, T6, T7, T8 any] struct {
 	v T1
 }
 
-// none is a private type with no members, used when we need a non-nil but unusable type.
-type none struct{}
+// xx is a private type with no members, used when we need a non-nil but unusable type.
+// The name is chosen purely for its visual distinctiveness, particularly in large blocks of boilerplate.
+type xx struct{}
 
 // someN[T0, T1, T2, T3, T4, T5, T6, T7, T8] constructs an optionN[T1, T2, T3, T4, T5, T6, T7, T8] from an existing value of type T0.
 // If the value is nil it returns None, otherwise Some.
@@ -33,14 +35,16 @@ type none struct{}
 //  2. T0 is not one of T1 or T2
 func someN[T0, T1, T2, T3, T4, T5, T6, T7, T8 any](value T0) (o optionN[T1, T2, T3, T4, T5, T6, T7, T8]) {
 	// Check static constraints first
-	noneType := reflect.TypeFor[none]()
+	xxType := reflect.TypeFor[xx]()
 	var t [9]reflect.Type
 	t[0], t[1], t[2], t[3], t[4], t[5], t[6], t[7], t[8] = reflect.TypeFor[T0](),
 		reflect.TypeFor[T1](), reflect.TypeFor[T2](), reflect.TypeFor[T3](), reflect.TypeFor[T4](),
 		reflect.TypeFor[T5](), reflect.TypeFor[T6](), reflect.TypeFor[T7](), reflect.TypeFor[T8]()
 	largest := 1
 	typeMatched := (t[1] == t[0])
-	for n := 2; n < 9 && t[n] != noneType; n++ {
+	// Scan the type parameters until we find xx; that's how we know which concrete Some<n> we were called as
+	var n int
+	for n = 2; n < 9 && t[n] != xxType; n++ {
 		if t[n].Size() > t[largest].Size() {
 			largest = n
 		}
@@ -48,11 +52,17 @@ func someN[T0, T1, T2, T3, T4, T5, T6, T7, T8 any](value T0) (o optionN[T1, T2, 
 			typeMatched = true
 		}
 	}
+	// Panic if static constraints were breached
 	if largest != 1 {
 		panic(fmt.Sprintf("bad type ordering; you must put the largest type (%s) first", t[largest].String()))
 	}
 	if !typeMatched {
-		panic(fmt.Sprintf("type %s is not in [%s, %s, %s, %s, %s, %s, %s, %s]", t[0].String(), t[1].String(), t[2].String(), t[3].String(), t[4].String(), t[5].String(), t[6].String(), t[7].String(), t[8].String()))
+		var names [8]string
+		for i := 0; i < n; i++ {
+			names[i] = t[i].String()
+		}
+		nameList := strings.Join(names[1:n], ", ")
+		panic(fmt.Sprintf("type %s is not in [%s]", names[0], nameList))
 	}
 	// OK, we can continue now
 	v := reflect.ValueOf(value)
@@ -104,13 +114,13 @@ func someN[T0, T1, T2, T3, T4, T5, T6, T7, T8 any](value T0) (o optionN[T1, T2, 
 	}
 }
 
-// match() converts an optionN into a MatchSome or none.
+// match() converts an optionN into a MatchSome or xx.
 func (o optionN[T1, T2, T3, T4, T5, T6, T7, T8]) match() any {
 	// use pointer type mangling to avoid making copies
 	// this relies on the memory layouts of Option and MatchSome being identical
 	switch o.t.(type) {
 	case nil:
-		return none{} // check none first for efficiency
+		return xx{} // check nil first for efficiency
 	case T1:
 		return *(*MatchSome[T1])(unsafe.Pointer(&o))
 	case T2:
@@ -128,6 +138,6 @@ func (o optionN[T1, T2, T3, T4, T5, T6, T7, T8]) match() any {
 	case T8:
 		return *(*MatchSome[T8])(unsafe.Pointer(&o))
 	default:
-		return none{} // should never get here but just in case
+		return xx{} // should never get here but just in case
 	}
 }
