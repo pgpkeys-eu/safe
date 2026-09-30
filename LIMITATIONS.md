@@ -6,6 +6,9 @@ Unlike Rust, the underlying Some types are not considered to be instances of `Op
 It is not possible therefore to construct a None value without a type parameter, and the parameterised constructor `None[T]()` is just syntactic sugar for `Option[T]{}`.
 It is possible to infer the return type of `Some()` from its argument, but this does not generalise to `Some2()` and above.
 
+Type matching of an Option requires two type matches in practice, so is less efficient than an interface.
+The first type match is internal to `safe` and checks for nils, while the second is performed by the caller on a value that is guaranteed to be non-nil.
+
 ## Option\<n\>[T1, T2, ...]
 
 Implementing `Option<n>` stretches the definition of `safe`ty somewhat, mainly due to limitations in Go's type system.
