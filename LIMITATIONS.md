@@ -65,3 +65,19 @@ type Option2[T1, T2 any] struct {
 
 Even this would have been an improvement, because then DeepEquals would compare `v` as raw bytes and wouldn't raise a pointer error (See "Deep Reflection" above).
 But we can't have nice things.
+
+**Nice Things**
+
+OK, we can have some.
+
+For example, using interfaces as the type tag means we can point the interface at the value field in order to set the tag.
+This may seem pointless - we know where the value field is without having to dereference the pointer - but it has some nice properties.
+
+Firstly, it gives us a Go-native method to store the type of the stored value.
+We can type match on the tag to discover the type of the stored value, instead of hand-rolling our own mapping of tags to types.
+
+Pointing the tag interface at the value means there is always a pointer pointing to the stored struct, and because the pointer is annotated with the correct type,
+the garbage collector knows the structure pointed to, including if it has pointer members, and so doesn't clean up second-order pointer targets prematurely.
+
+And finally, it allows us to call MarshalJSON directly on the tag, which falls through to the concrete type below, with correct typing.
+This avoids a LOT of boilerplate type matching code.
