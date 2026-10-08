@@ -2,36 +2,20 @@ package safe
 
 import (
 	"reflect"
-	"unsafe"
 )
 
 // Option uses optionN as its underlying type, but optionN has to handle
 // special cases such as type and size mismatches that do not apply to Option.
-// Some and Match are therefore implemented separately here and not aliased.
+// Some and Unwrap are therefore implemented separately here and not aliased.
 
-// Option represents a tagged-union of None and Some[T], which defaults to None.
+// Option represents a tagged-union of None and T, which defaults to None.
 // Option values SHOULD be created by calling either None() or Some().
 // DO NOT construct non-zero Option literals directly.
 type Option[T any] optionN[T, xx, xx, xx, xx, xx, xx, xx]
 
-// MatchSome is a public match type with one public member Some.
-// It MUST be used ONLY for type matching the return value of Match().
-// DO NOT construct directly using a struct literal, use Some<n>() to create an Option<n>.
-type MatchSome[T any] struct {
-	_    any
-	Some T
-}
-
-// Match() converts an Option into a MatchSome or an unusable type (representing None).
-func (o Option[T]) Match() any {
-	// use pointer type mangling to avoid making copies
-	// this relies on the memory layouts of Option and MatchSome being identical
-	switch o.tag.(type) {
-	case T:
-		return *(*MatchSome[T])(unsafe.Pointer(&o))
-	default:
-		return xx{}
-	}
+// Unwrap() converts an Option into a T or nil.
+func (o Option[T]) Unwrap() any {
+	return o.tag
 }
 
 // None() constructs a new None Option

@@ -91,9 +91,12 @@ We can type match on the tag to discover the dynamic type, instead of hand-rolli
 Second, pointing the tag interface at the value means there is always a valid pointer to the stored value for the lifetime of the `Option`.
 Because interfaces are type-annotated, the garbage collector knows the dynamic type of the target,
 including whether it has pointer members, and so won't double-free any second-order pointer targets.
+It also makes us copy-safe, because even though naive copies have no pointers to them and so are not protected from the garbage collector, the original is only an interface away.
 
-And finally, it allows us to call `MarshalJSON` directly on the tag interface, which falls through to the value below, with the correct dynamic typing.
+Thirdly, it allows us to call `MarshalJSON` directly on the tag interface, which falls through to the value below, with the correct dynamic typing.
 This avoids a LOT of boilerplate type matching code.
+
+And finally, it means that we don't need a `Some[T]` type - we can return the tag interface itself, and type match it directly with `T`.
 
 # Pretty Please With a Cherry on Top
 

@@ -18,9 +18,7 @@ The chosen design forces consumers to use either type matching or helper functio
 * tagged unions are implemented as generic struct types, not interfaces
 * the zero literals `Option[T]{}` and `Result[T]{}` represent safe and meaningful default values
 * all members of tagged unions are private
-* tagged unions must be explicitly converted to a match type before type matching
-* the match types `MatchSome`, `MatchOK` and `MatchErr` are used ephemerally for type matching, and must not be directly constructed
-* each match type exposes a single public member `Some`, `OK` or `Err` as appropriate
+* tagged unions must be unwrapped and type matched before they can be used
 
 This design choice has several advantages:
 
@@ -31,7 +29,6 @@ This design choice has several advantages:
 
 Return values should therefore be difficult or impossible to use unsafely, so long as `Option` and `Result` are used consistently in function signatures.
 For convenience, helper functions are provided to enable use of the embedded values without type matching (e.g. `UnwrapOr()`).
-There is no `Unwrap()` function by design, therefore there are no panics at consumption time.
 
 This design differs from earlier efforts, which implement tagged unions as interfaces.
 While this is conceptually intuitive, interfaces are nillable types and so cannot have safe default values.
@@ -77,19 +74,16 @@ The zero literal `Option[T]{}` represents None.
 If `value` is nil, `Some(value)` will (perhaps counterintuitively) return a None `Option`, otherwise it returns a Some.
 This ensures that a nil value can never be obtained from a Some `Option`.
 
-Consuming an `Option` is done by calling `Match()` and type-matching the return value:
+Consuming an `Option` is done by calling `Unwrap()` and type-matching the return value:
 
 ```
-switch x := o1.Match().(type){
-case MatchSome[T]:
-    fmt.printf("Some: %v", x.Some)
+switch x := o1.Unwrap().(type){
+case T:
+    fmt.printf("Some: %v", x)
 default:
     fmt.printf("None")
 }
 ```
-
-`MatchSome[T]` contains a single public member `Some` which contains the original non-nil value.
-The None case is handled by `default`.
 
 Other helper functions defined for `Option[T]`:
 
@@ -125,21 +119,18 @@ The zero literal `Result[T]{}` represents an OK containing the zero value of `T`
 If `err_value` is nil, `Err()` returns an Err `Result` containing an empty error message.
 This ensures that a nil error can never be obtained from an Err `Result`.
 
-Consuming a `Result` is done by calling `Match()` and type-matching the return value:
+Consuming a `Result` is done by calling `Unwrap()` and type-matching the return value:
 
 ```
-switch x := r1.Match().(type){
-case MatchOK[T]:
-    fmt.printf("OK: %v", x.OK)
-case MatchErr[T]:
-    fmt.printf("Err: %v", x.Err)
+switch x := r1.Unwrap().(type){
+case T:
+    fmt.printf("OK: %v", x)
+case error:
+    fmt.printf("Err: %v", x)
 default:
     fmt.printf("Should not get here")
 }
 ```
-
-`MatchOK[T]` contains a single public member `OK` which contains the original value.
-`MatchErr[T]` contains a single public member `Err` which contains the original error.
 
 Other helper functions defined for Result:
 
@@ -208,11 +199,11 @@ Note also that `reflect.DeepEquals` works fine on the happy path, but [can panic
 Consuming an `Option<n>` is done the same way as for `Option`:
 
 ```
-switch x := o1.Match().(type){
-case MatchSome[T1]:
-    fmt.printf("SomeT1: %v", x.Some)
-case MatchSome[T2]:
-    fmt.printf("SomeT2: %v", x.Some)
+switch x := o1.Unwrap().(type){
+case T1:
+    fmt.printf("SomeT1: %v", x)
+case T2:
+    fmt.printf("SomeT2: %v", x)
 default:
     fmt.printf("None")
 }

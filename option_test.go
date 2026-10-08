@@ -33,8 +33,8 @@ func newTestStruct(s1, s2 string, s3 *string) testOptions {
 func (s *OptionSuite) TestOptions(c *gc.C) {
 	res2 := Some[*testOptions](nil)
 	c.Check(res2.IsNone(), gc.Equals, true)
-	switch res2.Match().(type) {
-	case MatchSome[*testOptions]:
+	switch res2.Unwrap().(type) {
+	case *testOptions:
 		c.Log("impossible type")
 		c.Fail()
 	}
@@ -42,9 +42,9 @@ func (s *OptionSuite) TestOptions(c *gc.C) {
 	res3 := Some(&testOptions{S: "test"})
 	c.Check(res3.IsSome(), gc.Equals, true)
 
-	switch match := res3.Match().(type) {
-	case MatchSome[*testOptions]:
-		c.Check(match.Some, gc.DeepEquals, &testOptions{S: "test"})
+	switch match := res3.Unwrap().(type) {
+	case *testOptions:
+		c.Check(match, gc.DeepEquals, &testOptions{S: "test"})
 	default:
 		c.Log("impossible type")
 		c.Fail()

@@ -29,8 +29,8 @@ func newTestMultiStruct(s1, s2 string, s3 *string, i4 int32) testMultiOptions {
 func (s *OptionSuite) TestMultiOptions(c *gc.C) {
 	res2 := Some[*testMultiOptions](nil)
 	c.Check(res2.IsNone(), gc.Equals, true)
-	switch res2.Match().(type) {
-	case MatchSome[*testMultiOptions]:
+	switch res2.Unwrap().(type) {
+	case *testMultiOptions:
 		c.Log("impossible type")
 		c.Fail()
 	}
@@ -40,9 +40,9 @@ func (s *OptionSuite) TestMultiOptions(c *gc.C) {
 	c.Check(res3.IsSome(), gc.Equals, true)
 
 	var test2 testMultiOptions
-	switch match := res3.Match().(type) {
-	case MatchSome[*testMultiOptions]:
-		test2 = *match.Some
+	switch match := res3.Unwrap().(type) {
+	case *testMultiOptions:
+		test2 = *match
 		c.Check(test2, gc.DeepEquals, test)
 	default:
 		c.Log("impossible type")
@@ -50,9 +50,9 @@ func (s *OptionSuite) TestMultiOptions(c *gc.C) {
 	}
 
 	c.Check(test.Q.IsSome(), gc.Equals, true)
-	switch match := test.Q.Match().(type) {
-	case MatchSome[int32]:
-		c.Check(match.Some, gc.DeepEquals, int32(42))
+	switch match := test.Q.Unwrap().(type) {
+	case int32:
+		c.Check(match, gc.DeepEquals, int32(42))
 	default:
 		c.Log("impossible type")
 		c.Fail()

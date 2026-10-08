@@ -7,7 +7,7 @@ import (
 	"unsafe"
 )
 
-// optionN represents a tagged-union of None and N Some[T]s.
+// optionN represents a tagged-union of None and N other types.
 // The zero literal optionN[T1, T2, T3, T4, T5, T6, T7, T8]{} represents None.
 //
 // BEWARE that T1 MUST be the type with the largest size.
@@ -111,33 +111,5 @@ func someN[T0, T1, T2, T3, T4, T5, T6, T7, T8 any](value T0) (o optionN[T1, T2, 
 			m.tag = m.value
 		}
 		return
-	}
-}
-
-// match() converts an optionN into a MatchSome or xx.
-func (o optionN[T1, T2, T3, T4, T5, T6, T7, T8]) match() any {
-	// use pointer type mangling to avoid making copies
-	// this relies on the memory layouts of optionN and MatchSome being identical
-	switch o.tag.(type) {
-	case nil:
-		return xx{} // check nil first for efficiency
-	case T1:
-		return *(*MatchSome[T1])(unsafe.Pointer(&o))
-	case T2:
-		return *(*MatchSome[T2])(unsafe.Pointer(&o))
-	case T3:
-		return *(*MatchSome[T3])(unsafe.Pointer(&o))
-	case T4:
-		return *(*MatchSome[T4])(unsafe.Pointer(&o))
-	case T5:
-		return *(*MatchSome[T5])(unsafe.Pointer(&o))
-	case T6:
-		return *(*MatchSome[T6])(unsafe.Pointer(&o))
-	case T7:
-		return *(*MatchSome[T7])(unsafe.Pointer(&o))
-	case T8:
-		return *(*MatchSome[T8])(unsafe.Pointer(&o))
-	default:
-		return xx{} // should never get here but just in case
 	}
 }

@@ -33,9 +33,9 @@ func (s *ResultSuite) TestResults(c *gc.C) {
 	doc := newTestResults("so long", "", &ptr)
 	res := OK(doc)
 	c.Check(res.IsOK(), gc.Equals, true)
-	switch match := res.Match().(type) {
-	case MatchOK[testResults]:
-		c.Check(match.OK, gc.DeepEquals, doc)
+	switch match := res.Unwrap().(type) {
+	case testResults:
+		c.Check(match, gc.DeepEquals, doc)
 	default:
 		c.Log("impossible type")
 		c.Fail()
@@ -43,18 +43,18 @@ func (s *ResultSuite) TestResults(c *gc.C) {
 
 	res2 := Err[*testResults](nil)
 	c.Check(res2.IsErr(), gc.Equals, true)
-	switch match := res2.Match().(type) {
-	case MatchOK[*testResults]:
+	switch match := res2.Unwrap().(type) {
+	case *testResults:
 		c.Log("impossible type")
 		c.Fail()
-	case MatchErr[*testResults]:
-		c.Check(match.Err, gc.DeepEquals, errors.New(""))
+	case error:
+		c.Check(match, gc.DeepEquals, errors.New(""))
 	}
 
 	res3 := OK(&testResults{S: "test"})
-	switch match := res3.Match().(type) {
-	case MatchOK[*testResults]:
-		c.Check(match.OK, gc.DeepEquals, &testResults{S: "test"})
+	switch match := res3.Unwrap().(type) {
+	case *testResults:
+		c.Check(match, gc.DeepEquals, &testResults{S: "test"})
 	default:
 		c.Log("impossible type")
 		c.Fail()
